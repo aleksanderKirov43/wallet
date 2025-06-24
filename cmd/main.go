@@ -2,17 +2,13 @@ package main
 
 import (
 	"log"
-	"net/http"
-
-	"wallet/internal/router"
+	"wallet/internal/app"
 )
 
 func main() {
 
-	r := router.NewRouter()
-
 	log.Println("Сервер запущен на порту: 8080")
-	if err := http.ListenAndServe(":8080", r); err != nil {
+	if err := app.Run(); err != nil {
 		log.Fatalf("Сервер не удалось запустить: %v", err)
 	}
 

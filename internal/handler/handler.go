@@ -3,9 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
+	"wallet/internal/service"
+
+	"github.com/gorilla/mux"
 )
 
 type WalletRequest struct {
@@ -14,7 +16,17 @@ type WalletRequest struct {
 	Amount        int64  `json:"amount,omitempty"`
 }
 
-func CreateWallet(w http.ResponseWriter, r *http.Request) {
+type Handler struct {
+	service service.WalletService
+}
+
+func NewHandler(s service.WalletService) *Handler {
+	return &Handler{
+		service: s,
+	}
+}
+
+func (h *Handler) CreateWallet(w http.ResponseWriter, r *http.Request) {
 
 	var req WalletRequest
 
@@ -28,7 +40,7 @@ func CreateWallet(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func PostBalance(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) PostBalance(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	walletIdStr := vars["id"]
@@ -43,7 +55,7 @@ func PostBalance(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("id кошелька: %d", walletId)))
 }
 
-func GetBalance(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetBalance(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	walletIdStr := vars["id"]
@@ -59,7 +71,7 @@ func GetBalance(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func UpdateBalance(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdateBalance(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	walletIdStr := vars["id"]
 
@@ -73,7 +85,7 @@ func UpdateBalance(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("id кошелька: %d", walletId)))
 }
 
-func DeleteWallet(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteWallet(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	walletIdStr := vars["id"]
 

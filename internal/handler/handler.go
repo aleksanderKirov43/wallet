@@ -5,16 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"wallet/internal/model"
 	"wallet/internal/service"
 
 	"github.com/gorilla/mux"
 )
-
-type WalletRequest struct {
-	WalletID      int    `json:"walletId"`
-	OperationType string `json:"operationType"`
-	Amount        int64  `json:"amount,omitempty"`
-}
 
 type Handler struct {
 	service service.WalletService
@@ -28,7 +23,7 @@ func NewHandler(s service.WalletService) *Handler {
 
 func (h *Handler) CreateWallet(w http.ResponseWriter, r *http.Request) {
 
-	var req WalletRequest
+	var req model.Wallet
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Некорректный запрос", http.StatusBadRequest)

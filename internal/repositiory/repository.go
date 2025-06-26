@@ -4,13 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"wallet/internal/service"
+	"log"
+	"wallet/internal/model"
 )
 
 type Repository interface {
-	CreateWallet(ctx context.Context, wallet *service.Wallet) error
-	GetBalance(ctx context.Context, walletID int) (*service.Wallet, error)
-	UpdateBalance(ctx context.Context, wallet *service.Wallet) error
+	CreateWallet(ctx context.Context, wallet *model.Wallet) error
+	GetBalance(ctx context.Context, walletID int) (*model.Wallet, error)
+	UpdateBalance(ctx context.Context, wallet *model.Wallet) error
 	DeleteWallet(ctx context.Context, walletID int) error
 }
 
@@ -24,20 +25,21 @@ func NewRepositoryDB(db *sql.DB) *RepositoryDB {
 	}
 }
 
-func (r *RepositoryDB) CreateWallet(ctx context.Context, wallet *service.Wallet) error {
+func (r *RepositoryDB) CreateWallet(ctx context.Context, wallet *model.Wallet) error {
 
-	query := `INSERT INTO wallet_db (walletId, operationType, amount) VALUES ($1, $2, $3)`
+	query := `INSERT INTO wallet (walletId, operationType, amount) VALUES ($1, $2, $3)`
 
 	_, err := r.db.ExecContext(ctx, query, wallet.WalletID, wallet.OperationType, wallet.Amount)
 	if err != nil {
+		log.Println("Ошибка создания кошелька: %v", err)
 		return err
 	}
 	return nil
 }
 
-func (r *RepositoryDB) GetBalance(ctx context.Context, walletID int) (*service.Wallet, error) {
+func (r *RepositoryDB) GetBalance(ctx context.Context, walletID int) (*model.Wallet, error) {
 
-	query := `SELECT operationType, amount FROM wallet_db WHERE walletId = $1`
+	query := `SELECT operationType, amount FROM wallet WHERE walletId = $1`
 
 	row := r.db.QueryRowContext(ctx, query, walletID)
 
@@ -52,16 +54,16 @@ func (r *RepositoryDB) GetBalance(ctx context.Context, walletID int) (*service.W
 		return nil, err
 	}
 
-	return &service.Wallet{
+	return &model.Wallet{
 		WalletID:      walletID,
 		OperationType: operationType,
 		Amount:        amount,
 	}, nil
 }
 
-func (r *RepositoryDB) UpdateBalance(ctx context.Context, wallet *service.Wallet) error {
+func (r *RepositoryDB) UpdateBalance(ctx context.Context, wallet *model.Wallet) error {
 
-	query := "UPDATE wallet_db SET operationType = $1, amount = $2 WHERE walletId = $3"
+	query := "UPDATE wallet SET operationType = $1, amount = $2 WHERE walletId = $3"
 
 	_, err := r.db.ExecContext(ctx, query, wallet.OperationType, wallet.Amount, wallet.WalletID)
 	if err != nil {
@@ -73,7 +75,7 @@ func (r *RepositoryDB) UpdateBalance(ctx context.Context, wallet *service.Wallet
 }
 
 func (r *RepositoryDB) DeleteWallet(ctx context.Context, walletID int) error {
-	query := "DELETE FROM wallet_db WHERE walletId = $1"
+	query := "DELETE FROM wallet WHERE walletId = $1"
 
 	_, err := r.db.ExecContext(ctx, query, walletID)
 	if err != nil {

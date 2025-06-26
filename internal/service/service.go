@@ -4,25 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"wallet/internal/model"
 	"wallet/internal/repositiory"
 )
 
 type WalletService interface {
-	CreateWallet(ctx context.Context, req *Wallet) (*Wallet, error)
-	PostBalance(ctx context.Context, req *Wallet) (*Wallet, error)
+	CreateWallet(ctx context.Context, req *model.Wallet) (*model.Wallet, error)
+	PostBalance(ctx context.Context, req *model.Wallet) (*model.Wallet, error)
 	GetBalance(ctx context.Context, walletID int) (*CheckBalance, error)
-	UpdateBalance(ctx context.Context, req *Wallet) (*Wallet, error)
+	UpdateBalance(ctx context.Context, req *model.Wallet) (*model.Wallet, error)
 	DeleteWallet(ctx context.Context, walletID int) error
 }
 
 type CheckBalance struct {
 	Amount int64 `json:"amount"`
-}
-
-type Wallet struct {
-	WalletID      int    `json:"walletId"`
-	OperationType string `json:"operationType"`
-	Amount        int64  `json:"amount,omitempty"`
 }
 
 type WalletServiceImpl struct {
@@ -35,7 +30,7 @@ func NewWalletService(repo repositiory.Repository) *WalletServiceImpl {
 	}
 }
 
-func (s *WalletServiceImpl) CreateWallet(ctx context.Context, req *Wallet) (*Wallet, error) {
+func (s *WalletServiceImpl) CreateWallet(ctx context.Context, req *model.Wallet) (*model.Wallet, error) {
 
 	if req.OperationType != "DEPOSIT" {
 		return nil, errors.New("Сначала внесите депозит")
@@ -49,7 +44,7 @@ func (s *WalletServiceImpl) CreateWallet(ctx context.Context, req *Wallet) (*Wal
 	return req, nil
 }
 
-func (s *WalletServiceImpl) PostBalance(ctx context.Context, req *Wallet) (*Wallet, error) {
+func (s *WalletServiceImpl) PostBalance(ctx context.Context, req *model.Wallet) (*model.Wallet, error) {
 
 	exist, err := s.repo.GetBalance(ctx, req.WalletID)
 	if err != nil {
@@ -83,7 +78,7 @@ func (s *WalletServiceImpl) GetBalance(ctx context.Context, walletID int) (*Chec
 	return &CheckBalance{Amount: exist.Amount}, nil
 }
 
-func (s *WalletServiceImpl) UpdateBalance(ctx context.Context, req *Wallet) (*Wallet, error) {
+func (s *WalletServiceImpl) UpdateBalance(ctx context.Context, req *model.Wallet) (*model.Wallet, error) {
 
 	exist, err := s.repo.GetBalance(ctx, req.WalletID)
 	if err != nil {

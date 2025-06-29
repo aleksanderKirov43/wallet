@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"wallet/internal/model"
@@ -30,12 +29,24 @@ func (h *Handler) CreateWallet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Операция обработана: " + req.OperationType))
+	wallet, err := h.service.CreateWallet(r.Context(), &req)
+	if err != nil {
+		http.Error(w, "Ошибка созадния кошелька: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(wallet)
 }
 
 func (h *Handler) PostBalance(w http.ResponseWriter, r *http.Request) {
+
+	var req model.Wallet
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Некорректный JSON", http.StatusBadRequest)
+		return
+	}
 
 	vars := mux.Vars(r)
 	walletIdStr := vars["id"]
@@ -46,8 +57,16 @@ func (h *Handler) PostBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	req.WalletID = walletId
+
+	result, err := h.service.PostBalance(r.Context(), &req)
+	if err != nil {
+		http.Error(w, "Ошибка операции: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf("id кошелька: %d", walletId)))
+	json.NewEncoder(w).Encode(result)
 }
 
 func (h *Handler) GetBalance(w http.ResponseWriter, r *http.Request) {
@@ -61,12 +80,25 @@ func (h *Handler) GetBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	balance, err := h.service.GetBalance(r.Context(), walletId)
+	if err != nil {
+		http.Error(w, "Ошибка операции: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf("id кошелька: %d", walletId)))
+	json.NewEncoder(w).Encode(balance)
 
 }
 
 func (h *Handler) UpdateBalance(w http.ResponseWriter, r *http.Request) {
+	var req model.Wallet
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Некорректный JSON", http.StatusBadRequest)
+		return
+	}
+
 	vars := mux.Vars(r)
 	walletIdStr := vars["id"]
 
@@ -76,8 +108,16 @@ func (h *Handler) UpdateBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	req.WalletID = walletId
+
+	balanceUp, err := h.service.UpdateBalance(r.Context(), &req)
+	if err != nil {
+		http.Error(w, "Ошибка операции: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf("id кошелька: %d", walletId)))
+	json.NewEncoder(w).Encode(balanceUp)
 }
 
 func (h *Handler) DeleteWallet(w http.ResponseWriter, r *http.Request) {
@@ -90,6 +130,11 @@ func (h *Handler) DeleteWallet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err = h.service.DeleteWallet(r.Context(), walletId); err != nil {
+		http.Error(w, "Ошибка Удаления: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf("id кошелька: %d", walletId)))
+	w.Write([]byte("Кошелек успешно удален"))
 }
